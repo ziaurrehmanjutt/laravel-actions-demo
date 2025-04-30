@@ -17,8 +17,11 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, ctype, fileinfo, openssl, pdo, mysql, tokenizer, xml
+          extensions: mbstring, ctype, fileinfo, openssl, pdo, mysql, tokenizer, xml, gd, curl # Added common Laravel extensions
           coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
 
       - name: Copy .env
         run: cp .env.example .env
@@ -26,13 +29,10 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
-
       - name: Run migrations and tests
-        env:  # CORRECTED: Proper YAML indentation
+        env:
           DB_CONNECTION: sqlite
-          DB_DATABASE: ":memory:"  # Quotes for safety
-        run: |  # Aligned under the step
+          DB_DATABASE: ":memory:"
+        run: |
           php artisan migrate
           php artisan test
