@@ -1,38 +1,113 @@
-name: Laravel CI
+name: Laravel Advanced CI/CD
 
-on: [push]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DB_CONNECTION: sqlite
+  DB_DATABASE: ":memory:"
+  APP_ENV: testing
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      php-version: ${{ steps.set-php.outputs.version }}
+    steps:
+      - name: Determine PHP version
+        id: set-php
+        run: |
+          PHP_VERSION=$(grep -oP '"php": "\K[^"]+' composer.json || echo "8.2")
+          echo "version=${PHP_VERSION}" >> $GITHUB_OUTPUT
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ needs.setup.outputs.php-version }}
+          extensions: mbstring, ctype, fileinfo, openssl, pdo, mysql, tokenizer, xml, gd
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PHPStan (static analysis)
+        run: composer run phpstan
+
+      - name: Run ESLint (if using JS)
+        if: exists('package.json')
+        run: |
+          npm install
+          npm run lint
+
   test:
+    needs: [setup, lint]
     strategy:
       matrix:
         php: [8.2, 8.3]
-    runs-on: ubuntu-latest
-    name: PHP ${{ matrix.php }}
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    name: PHP ${{ matrix.php }} Tests
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, ctype, fileinfo, openssl, pdo, mysql, tokenizer, xml, gd, curl # Added common Laravel extensions
-          coverage: none
+          extensions: mbstring, ctype, fileinfo, openssl, pdo, mysql, tokenizer, xml, gd
+          coverage: pcov
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            vendor
+            node_modules
+          key: ${{ runner.os }}-${{ matrix.php }}-${{ hashFiles('**/composer.lock', '**/package-lock.json') }}
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Copy .env
-        run: cp .env.example .env
-
-      - name: Generate app key
-        run: php artisan key:generate
-
-      - name: Run migrations and tests
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ":memory:"
         run: |
-          php artisan migrate
-          php artisan test
+          composer install --no-interaction --prefer-dist
+          if [ -f package.json ]; then npm ci; fi
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan config:clear
+
+      - name: Run parallel tests
+        run: |
+          php artisan test --parallel --processes=4
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+
+  security:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependency audit
+        uses: dependency-review-action@v3
+
+      - name: Run security check
+        uses: symfonycorp/security-checker-action@v1
+        with:
+          lock-file: composer.lock
