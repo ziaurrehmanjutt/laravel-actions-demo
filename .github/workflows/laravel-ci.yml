@@ -1,0 +1,38 @@
+name: Laravel CI
+
+on: [push]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        php: [8.2, 8.3] # Test against 2 PHP versions
+    runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, ctype, fileinfo, openssl, pdo, mysql, tokenizer, xml
+          coverage: none
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run migrations and tests
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: :memory:
+        run: |
+          php artisan migrate
+          php artisan test
