@@ -6,7 +6,7 @@ jobs:
   test:
     strategy:
       matrix:
-        php: [8.2, 8.3] # Test against 2 PHP versions
+        php: [8.2, 8.3]
     runs-on: ubuntu-latest
     name: PHP ${{ matrix.php }}
     steps:
@@ -30,9 +30,9 @@ jobs:
         run: composer install --no-interaction --prefer-dist
 
       - name: Run migrations and tests
-        env:
+        env:  # CORRECTED: Proper YAML indentation
           DB_CONNECTION: sqlite
-          DB_DATABASE: :memory:
-        run: |
+          DB_DATABASE: ":memory:"  # Quotes for safety
+        run: |  # Aligned under the step
           php artisan migrate
           php artisan test
