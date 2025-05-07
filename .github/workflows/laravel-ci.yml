@@ -54,8 +54,8 @@ jobs:
 
       - name: Build assets
         run: |
-          npm ci
-          npm run dev
+          npm i
+          npm run build
 
       - name: Deploy to EC2
         uses: easingthemes/ssh-deploy@main
