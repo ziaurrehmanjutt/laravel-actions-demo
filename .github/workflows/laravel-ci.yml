@@ -53,7 +53,6 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-dev
 
       - name: Build assets
-        if: exists('package.json')
         run: |
           npm ci
           npm run production
