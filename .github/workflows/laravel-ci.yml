@@ -118,13 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ needs.setup.outputs.php-version }}
-          extensions: mbstring, ctype, fileinfo, openssl, pdo, mysql, tokenizer, xml, gd
+      - name: Checkout the files
+        uses: actions/checkout@v4
 
       - name: Install dependencies (no dev)
         run: composer install --no-interaction --prefer-dist --no-dev
@@ -135,8 +130,13 @@ jobs:
           npm ci
           npm run production
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
+      - name: Deploy to EC2
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.EC2_HOST }}
+          REMOTE_USER: ${{ secrets.EC2_USERNAME }}
+          TARGET: ${{ secrets.EC2_DEPLOY_PATH }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
