@@ -64,13 +64,3 @@ jobs:
           REMOTE_HOST: ${{ secrets.EC2_HOST }}
           REMOTE_USER: ${{ secrets.EC2_USERNAME }}
           TARGET: ${{ secrets.EC2_DEPLOY_PATH }}
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ${{ secrets.EC2_DEPLOY_PATH }}
-            git pull origin main
-            composer install --no-dev --optimize-autoloader
-            php artisan migrate --force
-            php artisan optimize:clear
