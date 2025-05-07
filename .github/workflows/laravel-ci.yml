@@ -69,5 +69,3 @@ jobs:
           REMOTE_HOST: ${{ secrets.EC2_HOST }}
           REMOTE_USER: ubuntu
           TARGET: /home/test1/web/zia1.work.gd/public_html
-          ARGS: "--rsync-path='sudo -u test1 rsync' -rlgoDzvc -i"
-          SSH_CMD_ARGS: "-o StrictHostKeyChecking=no"
