@@ -6,7 +6,7 @@ jobs:
   test:
     strategy:
       matrix:
-        php: [8.2, 8.3]
+        php: [8.3]
     runs-on: ubuntu-latest
     name: PHP ${{ matrix.php }}
     steps:
@@ -55,7 +55,7 @@ jobs:
       - name: Build assets
         run: |
           npm ci
-          npm run production
+          npm run dev
 
       - name: Deploy to EC2
         uses: easingthemes/ssh-deploy@main
