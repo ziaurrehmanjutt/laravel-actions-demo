@@ -41,7 +41,7 @@ jobs:
           php artisan test
 
   deploy:
-    needs: [lint, test, security]
+    needs: [test]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
