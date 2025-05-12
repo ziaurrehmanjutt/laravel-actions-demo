@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to My Laravel Site</title>
+    <title>Welcome to My Laravel Site - Upgrade</title>
     <style>
         /* Global Styles */
         body {
@@ -111,7 +111,7 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Welcome to My Laravel App</h1>
+        <h1>Welcome to My Laravel App - Upgrade</h1>
         <p>Your go-to platform for amazing services</p>
         <button onclick="window.location.href='#services'">Discover Our Services</button>
     </section>
